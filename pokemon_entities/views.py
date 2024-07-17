@@ -104,6 +104,7 @@ def show_pokemon(request, pokemon_id):
         if pokemon.image
         else DEFAULT_IMAGE_URL,
         "title_ru": pokemon.title,
+        "description": pokemon.description,
     }
 
     return render(
