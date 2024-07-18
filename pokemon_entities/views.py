@@ -107,6 +107,16 @@ def show_pokemon(request, pokemon_id):
         "title_en": pokemon.title_en,
         "title_jp": pokemon.title_jp,
         "description": pokemon.description,
+        "previous_evolution": {
+            "title_ru": pokemon.previous_evolution.title_ru,
+            "pokemon_id": pokemon.previous_evolution.pk,
+            "img_url": pokemon.previous_evolution.image.url
+        } if pokemon.previous_evolution else None,
+        "next_evolution": {
+            "title_ru": pokemon.next_evolution.title_ru,
+            "pokemon_id": pokemon.next_evolution.pk,
+            "img_url": pokemon.next_evolution.image.url
+        } if pokemon.next_evolution else None
     }
 
     return render(
