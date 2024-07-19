@@ -99,6 +99,11 @@ def show_pokemon(request, pokemon_id):
             request.build_absolute_uri(pokemon_entity.pokemon.image.url),
         )
 
+    try:
+        pokemon_next_evolution = pokemon.next_evolution.get()
+    except Pokemon.DoesNotExist:
+        pokemon_next_evolution = None
+
     pokemon_on_page = {
         "img_url": pokemon.image.url
         if pokemon.image
@@ -113,10 +118,10 @@ def show_pokemon(request, pokemon_id):
             "img_url": pokemon.previous_evolution.image.url
         } if pokemon.previous_evolution else None,
         "next_evolution": {
-            "title_ru": pokemon.next_evolution.title_ru,
-            "pokemon_id": pokemon.next_evolution.pk,
-            "img_url": pokemon.next_evolution.image.url
-        } if pokemon.next_evolution else None
+            "title_ru": pokemon_next_evolution.title_ru,
+            "pokemon_id": pokemon_next_evolution.pk,
+            "img_url": pokemon_next_evolution.image.url
+        } if pokemon_next_evolution else None
     }
 
     return render(
