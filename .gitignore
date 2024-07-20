@@ -92,5 +92,3 @@ media/
 
 # VSCode
 .vscode
-
-pokemon_entities/*.json
