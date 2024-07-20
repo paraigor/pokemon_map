@@ -38,7 +38,9 @@ def show_all_pokemons(request):
             folium_map,
             pokemon_entity.lat,
             pokemon_entity.lon,
-            request.build_absolute_uri(pokemon_entity.pokemon.image.url),
+            request.build_absolute_uri(pokemon_entity.pokemon.image.url)
+            if pokemon_entity.pokemon.image
+            else DEFAULT_IMAGE_URL,
         )
 
     pokemons = Pokemon.objects.all()
@@ -88,14 +90,18 @@ def show_pokemon(request, pokemon_id):
             "img_url": pokemon.previous_evolution.image.url
             if pokemon.previous_evolution.image
             else DEFAULT_IMAGE_URL,
-        } if pokemon.previous_evolution else None,
+        }
+        if pokemon.previous_evolution
+        else None,
         "next_evolution": {
             "title_ru": pokemon_next_evolution.title_ru,
             "pokemon_id": pokemon_next_evolution.pk,
             "img_url": pokemon_next_evolution.image.url
             if pokemon_next_evolution.image
             else DEFAULT_IMAGE_URL,
-        } if pokemon_next_evolution else None,
+        }
+        if pokemon_next_evolution
+        else None,
     }
 
     pokemon_entities = PokemonEntity.objects.filter(
@@ -110,7 +116,9 @@ def show_pokemon(request, pokemon_id):
             folium_map,
             pokemon_entity.lat,
             pokemon_entity.lon,
-            request.build_absolute_uri(pokemon_entity.pokemon.image.url),
+            request.build_absolute_uri(pokemon_entity.pokemon.image.url)
+            if pokemon_entity.pokemon.image
+            else DEFAULT_IMAGE_URL,
         )
 
     return render(
