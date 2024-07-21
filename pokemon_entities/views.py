@@ -1,6 +1,5 @@
 import folium
-from django.http import HttpResponseNotFound
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 
 from .models import Pokemon, PokemonEntity
@@ -26,10 +25,15 @@ def add_pokemon(folium_map, lat, lon, image_url=DEFAULT_IMAGE_URL):
     ).add_to(folium_map)
 
 
+def get_pokemon_image_url(image):
+    return image.url if image else DEFAULT_IMAGE_URL
+
+
 def show_all_pokemons(request):
+    localtime_now = timezone.localtime()
     pokemon_entities = PokemonEntity.objects.filter(
-        appeared_at__lte=timezone.localtime(),
-        disappeared_at__gt=timezone.localtime(),
+        appeared_at__lte=localtime_now,
+        disappeared_at__gt=localtime_now,
     )
 
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
@@ -38,9 +42,9 @@ def show_all_pokemons(request):
             folium_map,
             pokemon_entity.lat,
             pokemon_entity.lon,
-            request.build_absolute_uri(pokemon_entity.pokemon.image.url)
-            if pokemon_entity.pokemon.image
-            else DEFAULT_IMAGE_URL,
+            request.build_absolute_uri(
+                get_pokemon_image_url(pokemon_entity.pokemon.image)
+            ),
         )
 
     pokemons = Pokemon.objects.all()
@@ -50,9 +54,7 @@ def show_all_pokemons(request):
         pokemons_on_page.append(
             {
                 "pokemon_id": pokemon.pk,
-                "img_url": pokemon.image.url
-                if pokemon.image
-                else DEFAULT_IMAGE_URL,
+                "img_url": get_pokemon_image_url(pokemon.image),
                 "title_ru": pokemon.title_ru,
             }
         )
@@ -68,46 +70,36 @@ def show_all_pokemons(request):
 
 
 def show_pokemon(request, pokemon_id):
-    try:
-        pokemon = Pokemon.objects.get(pk=pokemon_id)
-    except Pokemon.DoesNotExist:
-        return HttpResponseNotFound("<h1>Такой покемон не найден</h1>")
+    pokemon = get_object_or_404(Pokemon, pk=pokemon_id)
 
-    try:
-        pokemon_next_evolution = pokemon.next_evolution.get()
-    except Pokemon.DoesNotExist:
-        pokemon_next_evolution = None
+    pokemon_next_evolution = pokemon.next_evolutions.filter().first()
+
+    pokemon_previous_evolution_on_page = {
+            "title_ru": pokemon.previous_evolution.title_ru,
+            "pokemon_id": pokemon.previous_evolution.pk,
+            "img_url": get_pokemon_image_url(pokemon.previous_evolution.image),
+        } if pokemon.previous_evolution else None
+
+    pokemon_next_evolution_on_page = {
+            "title_ru": pokemon_next_evolution.title_ru,
+            "pokemon_id": pokemon_next_evolution.pk,
+            "img_url": get_pokemon_image_url(pokemon_next_evolution.image),
+        } if pokemon_next_evolution else None
 
     pokemon_on_page = {
-        "img_url": pokemon.image.url if pokemon.image else DEFAULT_IMAGE_URL,
+        "img_url": get_pokemon_image_url(pokemon.image),
         "title_ru": pokemon.title_ru,
         "title_en": pokemon.title_en,
         "title_jp": pokemon.title_jp,
         "description": pokemon.description,
-        "previous_evolution": {
-            "title_ru": pokemon.previous_evolution.title_ru,
-            "pokemon_id": pokemon.previous_evolution.pk,
-            "img_url": pokemon.previous_evolution.image.url
-            if pokemon.previous_evolution.image
-            else DEFAULT_IMAGE_URL,
-        }
-        if pokemon.previous_evolution
-        else None,
-        "next_evolution": {
-            "title_ru": pokemon_next_evolution.title_ru,
-            "pokemon_id": pokemon_next_evolution.pk,
-            "img_url": pokemon_next_evolution.image.url
-            if pokemon_next_evolution.image
-            else DEFAULT_IMAGE_URL,
-        }
-        if pokemon_next_evolution
-        else None,
+        "previous_evolution": pokemon_previous_evolution_on_page,
+        "next_evolution": pokemon_next_evolution_on_page,
     }
 
-    pokemon_entities = PokemonEntity.objects.filter(
-        pokemon=pokemon,
-        appeared_at__lte=timezone.localtime(),
-        disappeared_at__gt=timezone.localtime(),
+    localtime_now = timezone.localtime()
+    pokemon_entities = pokemon.entities.filter(
+        appeared_at__lte=localtime_now,
+        disappeared_at__gt=localtime_now,
     )
 
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
@@ -116,9 +108,9 @@ def show_pokemon(request, pokemon_id):
             folium_map,
             pokemon_entity.lat,
             pokemon_entity.lon,
-            request.build_absolute_uri(pokemon_entity.pokemon.image.url)
-            if pokemon_entity.pokemon.image
-            else DEFAULT_IMAGE_URL,
+            request.build_absolute_uri(
+                get_pokemon_image_url(pokemon_entity.pokemon.image),
+            ),
         )
 
     return render(

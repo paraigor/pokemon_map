@@ -16,7 +16,7 @@ class Pokemon(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="next_evolution",
+        related_name="next_evolutions",
         verbose_name="из кого эволюционирует",
     )
 
@@ -26,21 +26,24 @@ class Pokemon(models.Model):
 
 class PokemonEntity(models.Model):
     pokemon = models.ForeignKey(
-        Pokemon, on_delete=models.CASCADE, verbose_name="покемон"
+        Pokemon,
+        on_delete=models.CASCADE,
+        verbose_name="покемон",
+        related_name="entities",
     )
-    lat = models.FloatField("широта", default=0, blank=True)
-    lon = models.FloatField("долгота", default=0, blank=True)
+    lat = models.FloatField("широта", null=True, blank=True)
+    lon = models.FloatField("долгота", null=True, blank=True)
     appeared_at = models.DateTimeField(
         "время появления", null=True, blank=True
     )
     disappeared_at = models.DateTimeField(
         "время исчезновения", null=True, blank=True
     )
-    level = models.IntegerField("уровень", default=0)
-    health = models.IntegerField("здоровье", default=0)
-    strength = models.IntegerField("сила", default=0)
-    defence = models.IntegerField("защита", default=0)
-    stamina = models.IntegerField("выносливость", default=0)
+    level = models.IntegerField("уровень")
+    health = models.IntegerField("здоровье")
+    strength = models.IntegerField("сила")
+    defence = models.IntegerField("защита")
+    stamina = models.IntegerField("выносливость")
 
     def __str__(self):
         return f"Сущность {self.pokemon.title_ru}"
